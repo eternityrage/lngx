@@ -335,6 +335,33 @@ def upload_to_facebook_story(video_path):
         print(f"[facebook] ❌ ERROR: {e}")
         raise e
 
+def _post_vocabulary_comment(video_id, description, access_token):
+    """Post vocabulary list as first comment for better engagement"""
+    import time
+    
+    print(f"[facebook] Posting vocabulary list as pinned comment...")
+    
+    # Wait a bit for video to process
+    time.sleep(3)
+    
+    comment_url = f"https://graph.facebook.com/v21.0/{video_id}/comments"
+    comment_data = {
+        'access_token': access_token,
+        'message': description[:500]  # Facebook comment limit
+    }
+    
+    try:
+        resp = requests.post(comment_url, data=comment_data, timeout=30)
+        if resp.status_code == 200:
+            result = resp.json()
+            comment_id = result.get('id')
+            print(f"[facebook] ✅ Comment posted! ID: {comment_id}")
+        else:
+            print(f"[facebook] Comment post failed: {resp.status_code}")
+    except Exception as e:
+        print(f"[facebook] Comment error: {e}")
+
+
 if __name__ == '__main__':
     # Test upload
     from pathlib import Path

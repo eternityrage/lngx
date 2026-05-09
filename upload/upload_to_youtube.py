@@ -52,56 +52,59 @@ def get_authenticated_service():
     return build('youtube', 'v3', credentials=creds)
 
 
-def generate_video_metadata(word: str, reel_data: dict = None):
-    title = f"Word of the Day: {word} - English Vocabulary"
-    if reel_data and reel_data.get("level"):
-        title = f"Word of the Day: {word} ({reel_data['level']}) - Learn English"
-
+def generate_video_metadata(words_data: list, reel_data: dict = None):
+    """Generate YouTube title, description, and tags for vocabulary video with ALL 5 words"""
+    
+    if not words_data:
+        return "English Vocabulary Lesson - Lingexa", "Learn English words with Lingexa!", ["vocabulary", "learn english", "lingexa"]
+    
+    # Get first 3 words for title
+    first_words = [w.get("word", "") for w in words_data[:3]]
+    words_count = len(words_data)
+    
+    title = f"Learn {words_count} English Words - {', '.join(first_words)} | Vocabulary Lesson"
+    
     description_lines = [
-        f"Learn the word '{word}' with Lingexa!",
-        "",
+        f"📚 Learn {words_count} new English words with Lingexa!",
+        f"",
+        f"=== TODAY'S VOCABULARY ===",
+        f"",
     ]
-
-    if reel_data:
-        pos = reel_data.get("part_of_speech", "")
-        definition = reel_data.get("definition", "")
-        example = reel_data.get("example", "")
-        synonyms = reel_data.get("synonyms", [])
-        pronunciation = reel_data.get("pronunciation", "")
-        fun_fact = reel_data.get("fun_fact", "")
-        level = reel_data.get("level", "")
-
-        if pronunciation:
-            description_lines.append(f"Pronunciation: {pronunciation}")
-        if pos:
-            description_lines.append(f"Part of Speech: {pos}")
-        if level:
-            description_lines.append(f"Level: {level}")
-        description_lines.append("")
-        if definition:
-            description_lines.append(f"Meaning: {definition}")
-            description_lines.append("")
-        if example:
-            description_lines.append(f"Example: {example}")
-            description_lines.append("")
+    
+    # Add all 5 words with details
+    for i, w in enumerate(words_data, 1):
+        word = w.get("word", "")
+        pos = w.get("part_of_speech", "")
+        definition = w.get("definition", "")
+        example = w.get("example", "")
+        synonyms = w.get("synonyms", [])
+        fun_fact = w.get("fun_fact", "")
+        level = w.get("level", "")
+        
+        description_lines.append(f"{i}. {word.upper()} ({pos}){f' - {level}' if level else ''}")
+        description_lines.append(f"   Definition: {definition}")
+        description_lines.append(f"   Example: {example}")
         if synonyms:
-            description_lines.append(f"Synonyms: {', '.join(synonyms)}")
-            description_lines.append("")
+            description_lines.append(f"   Synonyms: {', '.join(synonyms)}")
         if fun_fact:
-            description_lines.append(f"Fun Fact: {fun_fact}")
-            description_lines.append("")
-
+            description_lines.append(f"   💡 {fun_fact}")
+        description_lines.append(f"")
+    
     description_lines.extend([
-        "Learn a new word every day with Lingexa!",
-        "Subscribe for daily English vocabulary lessons!",
-        "",
-        "#Lingexa #Vocabulary #LearnEnglish #WordOfTheDay #EnglishLearning",
-        "#VocabularyBuilder #EnglishWords #StudyEnglish #DailyVocabulary",
-        "#Shorts"
+        f"=== ABOUT LINGEXA ===",
+        f"",
+        f"Learn a new word every day with Lingexa!",
+        f"🔔 Subscribe for daily English vocabulary lessons!",
+        f"📱 Follow us on social media @lingexa",
+        f"",
+        f"=== HASHTAGS ===",
+        f"#Lingexa #Vocabulary #LearnEnglish #WordOfTheDay #EnglishLearning #VocabularyBuilder #EnglishWords #StudyEnglish #DailyVocabulary #ESL #EnglishPractice #LanguageLearning #Shorts",
     ])
-
+    
     description = "\n".join(description_lines)
-
+    
+    # Generate tags from all words
+    all_words_lower = [w.get("word", "").lower() for w in words_data]
     tags = [
         "vocabulary",
         "learn english",
@@ -111,15 +114,13 @@ def generate_video_metadata(word: str, reel_data: dict = None):
         "vocabulary builder",
         "english words",
         "lingexa",
-        word.lower(),
         "study english",
         "daily vocabulary",
-        "english practice"
-    ]
-
-    if reel_data and reel_data.get("level"):
-        tags.append(reel_data["level"].lower())
-
+        "english practice",
+        "esl",
+        "language learning",
+    ] + all_words_lower[:5]
+    
     return title, description, tags
 
 
