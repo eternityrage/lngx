@@ -34,6 +34,7 @@ TTS_VOICE = "en-US-GuyNeural"
 CHANNEL_NAME = "Lingexa"
 WORDS_PER_VIDEO = 5
 WORD_HISTORY_FILE = HISTORY_DIR / "all_generated_words.json"
+FONTS_DIR = Path(__file__).parent / "fonts"
 
 WORD_LEVELS = ["Beginner", "Intermediate", "Advanced", "GRE", "SAT", "TOEFL"]
 
@@ -123,9 +124,10 @@ def get_fallback_words(num_words: int) -> list:
 
 def create_background():
     from PIL import Image, ImageDraw
-    import random
     img = Image.new('RGB', (VIDEO_WIDTH, VIDEO_HEIGHT))
     draw = ImageDraw.Draw(img)
+    
+    # Light cream gradient - NO circles, clean background
     for y in range(VIDEO_HEIGHT):
         ratio = y / VIDEO_HEIGHT
         if ratio < 0.5:
@@ -135,14 +137,7 @@ def create_background():
             g = int(252 + (240 - 252) * ((ratio - 0.5) * 2))
             b = int(245 + (230 - 245) * ((ratio - 0.5) * 2))
         draw.rectangle([(0, y), (VIDEO_WIDTH, y + 1)], fill=(r, g, b))
-    circles = [(VIDEO_WIDTH - 120, 280, 150), (100, 600, 100), (VIDEO_WIDTH - 180, 1000, 180), (150, 1400, 130), (VIDEO_WIDTH - 100, 1700, 120)]
-    for cx, cy, r in circles:
-        draw.ellipse([(cx - r, cy - r), (cx + r, cy + r)], outline=(220, 210, 200), width=2)
-    for _ in range(80):
-        x = random.randint(50, VIDEO_WIDTH - 50)
-        y = random.randint(50, VIDEO_HEIGHT - 50)
-        size = random.randint(2, 4)
-        draw.ellipse([(x, y), (x + size, y + size)], fill=(230, 220, 210))
+    
     return img
 
 
@@ -302,30 +297,75 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     CENTER_X = VIDEO_WIDTH // 2
     CONTENT_WIDTH = VIDEO_WIDTH - (MARGIN_X * 2)
 
-    fonts_bold = ["C:/Windows/Fonts/arialbd.ttf", "C:/Windows/Fonts/verdanab.ttf"]
-    fonts_regular = ["C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/verdana.ttf"]
+    # Cross-platform font paths - system fonts only (no downloads needed)
+    # Linux: Noto Sans (installed via apt-get install fonts-noto fonts-noto-core)
+    # Windows: Arial/Verdana/Segoe UI
+    fonts_bold = [
+        # Linux paths (Ubuntu/Debian with fonts-noto-core)
+        "/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf",
+        "/usr/share/fonts/noto/NotoSans-Bold.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansDisplay-Bold.ttf",
+        "/usr/share/fonts/noto/NotoSansDisplay-Bold.ttf",
+        # Linux fallback to Liberation Sans Bold
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+        "/usr/share/fonts/Liberation/LiberationSans-Bold.ttf",
+        # Last resort Linux fallback to regular
+        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+        "/usr/share/fonts/noto/NotoSans-Regular.ttf",
+        # Windows paths
+        "C:/Windows/Fonts/arialbd.ttf",
+        "C:/Windows/Fonts/verdanab.ttf",
+        "C:/Windows/Fonts/segoeuib.ttf",
+    ]
+    
+    fonts_regular = [
+        # Linux paths (Ubuntu/Debian with fonts-noto-core)
+        "/usr/share/fonts/truetype/noto/NotoSans-Regular.ttf",
+        "/usr/share/fonts/noto/NotoSans-Regular.ttf",
+        "/usr/share/fonts/truetype/noto/NotoSansDisplay-Regular.ttf",
+        "/usr/share/fonts/noto/NotoSansDisplay-Regular.ttf",
+        # Linux fallback to Liberation Sans
+        "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
+        "/usr/share/fonts/Liberation/LiberationSans-Regular.ttf",
+        # Windows paths
+        "C:/Windows/Fonts/arial.ttf",
+        "C:/Windows/Fonts/verdana.ttf",
+        "C:/Windows/Fonts/segoeui.ttf",
+    ]
 
     def load_font(paths, size):
         for p in paths:
             try:
-                return ImageFont.truetype(p, size)
+                font = ImageFont.truetype(p, size)
+                # Test if font actually renders text
+                test_bbox = draw.textbbox((0, 0), "AW", font=font)
+                if test_bbox[2] - test_bbox[0] > size * 0.5:
+                    print(f"[font] Loaded: {Path(p).name} ({size}pt)")
+                    return font
             except:
                 continue
+        print(f"[font] WARNING: No font found at size {size}, using default")
         return ImageFont.load_default()
 
-    font_header = load_font(fonts_bold, 52)
-    font_word = load_font(fonts_bold, 130)
-    font_level = load_font(fonts_bold, 42)
-    font_pos = load_font(fonts_bold, 52)
-    font_def_label = load_font(fonts_bold, 38)
-    font_def = load_font(fonts_regular, 58)
-    font_ex_label = load_font(fonts_bold, 38)
-    font_ex = load_font(fonts_regular, 48)
-    font_syn_label = load_font(fonts_bold, 38)
-    font_syn = load_font(fonts_regular, 42)
-    font_ff_label = load_font(fonts_bold, 38)
-    font_ff = load_font(fonts_regular, 40)
-    font_footer = load_font(fonts_bold, 40)
+    # Verify fonts are loaded correctly
+    print("[font] Loading fonts for Linux/Windows...")
+
+    font_header = load_font(fonts_bold, 65)        # Increased from 52
+    font_word = load_font(fonts_bold, 150)         # Increased from 130 - HUGE for visibility
+    font_level = load_font(fonts_bold, 50)         # Increased from 42
+    font_pos = load_font(fonts_bold, 60)           # Increased from 52
+    font_def_label = load_font(fonts_bold, 42)     # Increased from 38
+    font_def = load_font(fonts_regular, 65)        # Increased from 58 - BIG for readability
+    font_ex_label = load_font(fonts_bold, 42)      # Increased from 38
+    font_ex = load_font(fonts_regular, 54)         # Increased from 48
+    font_syn_label = load_font(fonts_bold, 42)     # Increased from 38
+    font_syn = load_font(fonts_regular, 48)        # Increased from 42
+    font_ff_label = load_font(fonts_bold, 42)      # Increased from 38
+    font_ff = load_font(fonts_regular, 46)         # Increased from 40
+    font_footer = load_font(fonts_bold, 46)        # Increased from 40
+
+    # Debug: Log font sizes being used
+    print(f"[font] Font sizes - Header: 65, Word: 150, Level: 50, POS: 60, Def: 65, Example: 54")
 
     word = word_data["word"].upper()
     pos = word_data.get("part_of_speech", "")
