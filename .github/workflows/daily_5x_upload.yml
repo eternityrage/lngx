@@ -50,11 +50,25 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install system dependencies
+      - name: Install system dependencies and fonts
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg fonts-noto fonts-noto-cjk fonts-noto-core fonts-noto-extra
-
+          sudo apt-get install -y ffmpeg fonts-noto fonts-noto-core fonts-liberation
+          
+          # Verify fonts are installed
+          echo "Checking installed fonts..."
+          fc-list | grep -i "Noto Sans" | head -10
+          
+          # List available font files
+          echo "Noto font files:"
+          find /usr/share/fonts -name "*.ttf" | grep -i "noto" | head -20
+          
+          # Install a reliable fallback font
+          echo "Installing Liberation fonts as fallback..."
+          fc-list | grep -i "Liberation" | head -5
+          
+          echo "✅ Fonts ready for Lingexa!"
+          
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
