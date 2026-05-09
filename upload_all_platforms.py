@@ -293,10 +293,10 @@ def main():
 
     print(f"\nFound latest reel:")
     print(f"   Word: {reel['word']}")
-    print(f"   Definition: {reel['definition'][:60]}...")
+    print(f"   Words count: {len(reel.get('words', []))}")
     print(f"   Video: {reel['video_path']}")
 
-    caption = generate_caption(reel, reel['word'], platform="facebook")
+    caption = generate_caption(reel, platform="facebook")
     print(f"\nGenerated caption ({len(caption)} chars):")
     print("-"*80)
     print(caption[:500] + "..." if len(caption) > 500 else caption)
