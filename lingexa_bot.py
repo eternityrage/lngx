@@ -38,15 +38,6 @@ FONTS_DIR = Path(__file__).parent / "fonts"
 
 WORD_LEVELS = ["Beginner", "Intermediate", "Advanced", "GRE", "SAT", "TOEFL"]
 
-FALLBACK_WORDS = [
-    {"word": "Eloquent", "part_of_speech": "adjective", "definition": "Fluent and persuasive in speaking", "example": "She gave an eloquent speech.", "synonyms": ["articulate", "expressive"], "fun_fact": "From Latin meaning 'to speak out'", "level": "Advanced"},
-    {"word": "Resilient", "part_of_speech": "adjective", "definition": "Able to recover quickly", "example": "The resilient community rebuilt.", "synonyms": ["tough", "strong"], "fun_fact": "From Latin 'to jump back'", "level": "Intermediate"},
-    {"word": "Serendipity", "part_of_speech": "noun", "definition": "Finding good things by chance", "example": "Finding the book was serendipity.", "synonyms": ["luck", "fortune"], "fun_fact": "From a Persian fairy tale", "level": "Advanced"},
-    {"word": "Ubiquitous", "part_of_speech": "adjective", "definition": "Present or found everywhere", "example": "Smartphones are ubiquitous now.", "synonyms": ["everywhere", "common"], "fun_fact": "Latin for 'everywhere'", "level": "GRE"},
-    {"word": "Ephemeral", "part_of_speech": "adjective", "definition": "Lasting a very short time", "example": "Cherry blossoms are ephemeral.", "synonyms": ["fleeting", "brief"], "fun_fact": "Greek for 'one day only'", "level": "Literary"},
-]
-
-
 def load_word_history():
     if WORD_HISTORY_FILE.exists():
         with open(WORD_HISTORY_FILE, "r", encoding="utf-8") as f:
@@ -77,15 +68,17 @@ def add_words_to_history(words):
 
 
 def generate_word_data(num_words: int = WORDS_PER_VIDEO) -> list:
-    max_attempts = 3
+    max_attempts = 5
     for attempt in range(max_attempts):
         try:
             import requests
             url = "https://gen.pollinations.ai/v1/chat/completions"
             headers = {"Authorization": f"Bearer {POLLINATIONS_API_KEY}", "Content-Type": "application/json"}
-            prompt = f"""Generate {num_words * 2} unique English vocabulary words.
+            key_status = "SET" if POLLINATIONS_API_KEY else "MISSING"
+            print(f"[api] Attempt {attempt + 1}/{max_attempts}: Key={key_status}, Model={AI_MODEL}")
+            prompt = f"""Generate {num_words * 3} unique English vocabulary words.
 Return as JSON: [{{"word": "word", "part_of_speech": "noun/verb/adjective/adverb", "definition": "simple max 10 words", "example": "example sentence", "synonyms": ["syn1", "syn2"], "fun_fact": "short fact"}}]
-Return ONLY valid JSON array"""
+Return ONLY valid JSON array. Do NOT repeat any words."""
             payload = {"model": AI_MODEL, "messages": [{"role": "system", "content": "Return ONLY valid JSON array."}, {"role": "user", "content": prompt}], "temperature": 0.9}
             response = requests.post(url, headers=headers, json=payload, timeout=60)
             response.raise_for_status()
@@ -106,24 +99,13 @@ Return ONLY valid JSON array"""
                     break
             if len(fresh_words) >= num_words:
                 add_words_to_history([w["word"] for w in fresh_words[:num_words]])
+                print(f"[api] SUCCESS: Got {len(fresh_words)} fresh words on attempt {attempt + 1}")
                 return fresh_words[:num_words]
+            else:
+                print(f"[api] Only got {len(fresh_words)}/{num_words} fresh words, retrying...")
         except Exception as e:
-            print(f"[content] Attempt {attempt + 1} failed: {e}")
-    print("[content] Using fallback words...")
-    return get_fallback_words(num_words)
-
-
-def get_fallback_words(num_words: int) -> list:
-    fresh = [w.copy() for w in FALLBACK_WORDS if not is_word_used(w["word"])]
-    if not fresh:
-        fresh = [w.copy() for w in FALLBACK_WORDS]
-    result = []
-    for w in fresh:
-        if len(result) >= num_words:
-            break
-        result.append(w)
-        add_words_to_history([w["word"]])
-    return result
+            print(f"[api] Attempt {attempt + 1}/{max_attempts} FAILED: {type(e).__name__}: {e}")
+    raise RuntimeError("API failed all attempts - cannot generate words without API. Check POLLINATIONS_API_KEY and AI_MODEL in .env")
 
 
 def create_background():
@@ -253,12 +235,10 @@ def get_multiline_text_bbox(draw, lines, font):
     if not lines:
         return (0, 0, 0, 0)
     
-    # Get single character bbox for line height
     char_bbox = draw.textbbox((0, 0), "A", font=font)
     line_height = char_bbox[3] - char_bbox[1]
-    line_spacing = int(line_height * 1.4)
+    line_spacing = int(line_height * 1.5)
     
-    # Find max width
     max_width = 0
     for line in lines:
         line_bbox = draw.textbbox((0, 0), line, font=font)
@@ -274,18 +254,14 @@ def draw_centered_text_in_box(img_draw, text, font, box_x, box_y, box_width, box
     """Draw text perfectly centered in a box with equal padding on all sides"""
     lines = wrap_text(img_draw, text, font, box_width - (padding * 2))
     
-    # Get accurate text dimensions with proper line spacing
     char_bbox = img_draw.textbbox((0, 0), "A", font=font)
     line_height = char_bbox[3] - char_bbox[1]
-    line_spacing = int(line_height * 1.4)
+    line_spacing = int(line_height * 1.5)
     text_total_height = (len(lines) - 1) * line_spacing + line_height
     
-    # Calculate centered starting position
-    # Equal padding top and bottom
     actual_padding_top = (box_height - text_total_height) // 2
     actual_padding_bottom = box_height - text_total_height - actual_padding_top
     
-    # Draw each line
     for i, line in enumerate(lines):
         line_y = box_y + actual_padding_top + (i * line_spacing) + (line_height // 2)
         img_draw.text((box_x + box_width // 2, line_y), line, fill=fill_color, font=font, anchor="mm")
@@ -299,7 +275,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     img = bg_image.copy().convert('RGBA')
     draw = ImageDraw.Draw(img)
 
-    MARGIN_X = 140
+    MARGIN_X = 130
     CENTER_X = VIDEO_WIDTH // 2
     CONTENT_WIDTH = VIDEO_WIDTH - (MARGIN_X * 2)
 
@@ -382,14 +358,14 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     level = word_data.get("level", "")
 
     # === START WITH BIG GAP FROM TOP ===
-    y_cursor = 250
+    y_cursor = 220
 
     # Header bar
     draw.rectangle([(0, 0), (VIDEO_WIDTH, 90)], fill=(45, 35, 65))
     draw.text((CENTER_X, 45), CHANNEL_NAME.upper(), fill=(255, 255, 255), font=font_header, anchor="mm")
     
     # === GAP AFTER HEADER ===
-    y_cursor = 280
+    y_cursor = 260
 
     # Word
     word_bbox = draw.textbbox((0, 0), word, font=font_word)
@@ -433,11 +409,11 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     
     char_bbox = draw.textbbox((0, 0), "A", font=font_def)
     line_height = char_bbox[3] - char_bbox[1]
-    line_spacing = int(line_height * 1.4)
+    line_spacing = int(line_height * 1.5)
     text_height = (def_lines_count - 1) * line_spacing + line_height
     
     # BIG equal padding
-    padding = 50
+    padding = 45
     def_box_h = text_height + (padding * 2)
 
     def_box = Image.new('RGBA', (CONTENT_WIDTH, def_box_h), (65, 50, 95, 255))
@@ -450,7 +426,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         def_draw.text((CONTENT_WIDTH // 2, line_y), line, fill=(255, 255, 255), font=font_def, anchor="mm")
 
     img.paste(def_box, (MARGIN_X, y_cursor), def_box)
-    y_cursor += def_box_h + 70
+    y_cursor += def_box_h + 65
 
     # === EXAMPLE - PERFECTLY CENTERED ===
     ex_label = "EXAMPLE"
@@ -462,11 +438,11 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     
     ex_char_bbox = draw.textbbox((0, 0), "A", font=font_ex)
     ex_line_height = ex_char_bbox[3] - ex_char_bbox[1]
-    ex_line_spacing = int(ex_line_height * 1.4)
+    ex_line_spacing = int(ex_line_height * 1.5)
     ex_text_height = (ex_lines_count - 1) * ex_line_spacing + ex_line_height
     
     # BIG equal padding
-    ex_padding = 45
+    ex_padding = 40
     ex_box_h = ex_text_height + (ex_padding * 2)
 
     ex_box = Image.new('RGBA', (CONTENT_WIDTH, ex_box_h), (95, 80, 125, 220))
@@ -479,7 +455,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         ex_draw.text((CONTENT_WIDTH // 2, line_y), line, fill=(255, 255, 255), font=font_ex, anchor="mm")
 
     img.paste(ex_box, (MARGIN_X, y_cursor), ex_box)
-    y_cursor += ex_box_h + 70
+    y_cursor += ex_box_h + 65
 
     # Synonyms
     if synonyms:
@@ -508,7 +484,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         
         ff_char_bbox = draw.textbbox((0, 0), "A", font=font_ff)
         ff_line_height = ff_char_bbox[3] - ff_char_bbox[1]
-        ff_line_spacing = int(ff_line_height * 1.4)
+        ff_line_spacing = int(ff_line_height * 1.5)
         ff_text_height = (len(ff_lines) - 1) * ff_line_spacing + ff_line_height
         
         ff_padding = 35
