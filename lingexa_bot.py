@@ -68,18 +68,44 @@ def add_words_to_history(words):
 
 
 def generate_word_data(num_words: int = WORDS_PER_VIDEO) -> list:
-    max_attempts = 5
+    max_attempts = 10
+    categories = [
+        "business and professional",
+        "academic and scientific",
+        "literary and artistic",
+        "emotional and psychological",
+        "social and cultural",
+        "philosophical and abstract",
+        "descriptive and sensory",
+        "technical and modern",
+        "nature and environment",
+        "character and personality",
+    ]
     for attempt in range(max_attempts):
         try:
             import requests
             url = "https://gen.pollinations.ai/v1/chat/completions"
             headers = {"Authorization": f"Bearer {POLLINATIONS_API_KEY}", "Content-Type": "application/json"}
-            key_status = "SET" if POLLINATIONS_API_KEY else "MISSING"
-            print(f"[api] Attempt {attempt + 1}/{max_attempts}: Key={key_status}, Model={AI_MODEL}")
-            prompt = f"""Generate {num_words * 3} unique English vocabulary words.
-Return as JSON: [{{"word": "word", "part_of_speech": "noun/verb/adjective/adverb", "definition": "simple max 10 words", "example": "example sentence", "synonyms": ["syn1", "syn2"], "fun_fact": "short fact"}}]
-Return ONLY valid JSON array. Do NOT repeat any words."""
-            payload = {"model": AI_MODEL, "messages": [{"role": "system", "content": "Return ONLY valid JSON array."}, {"role": "user", "content": prompt}], "temperature": 0.9}
+            category = categories[attempt % len(categories)]
+            print(f"[api] Attempt {attempt + 1}/{max_attempts}: Model={AI_MODEL}, Category={category}")
+            history = load_word_history()
+            all_used = history.get("words", [])
+            recent_used = all_used[-50:] if len(all_used) > 50 else all_used
+            print(f"[api] History: {len(all_used)} total words, sending {len(recent_used)} recent to API")
+            used_list = ", ".join(recent_used) if recent_used else "(none yet)"
+            prompt = f"""Generate exactly 15 unique English vocabulary words from the {category} domain.
+
+STRICT RULES:
+- NEVER repeat these words: {used_list}
+- Each word must be a single word (no phrases, no hyphens)
+- Return ONLY a valid JSON array
+- Every word must be different from all others in your response
+
+Format for each word:
+{{"word": "word", "part_of_speech": "noun/verb/adjective/adverb", "definition": "simple definition under 12 words", "example": "example sentence under 10 words", "synonyms": ["syn1", "syn2"], "fun_fact": "short interesting fact"}}
+
+Return ONLY the JSON array. Nothing else."""
+            payload = {"model": AI_MODEL, "messages": [{"role": "system", "content": "You are an English vocabulary generator. Return ONLY valid JSON arrays."}, {"role": "user", "content": prompt}], "temperature": 1.2}
             response = requests.post(url, headers=headers, json=payload, timeout=60)
             response.raise_for_status()
             data = response.json()
@@ -89,14 +115,26 @@ Return ONLY valid JSON array. Do NOT repeat any words."""
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
             words = json.loads(content)
+            print(f"[api] AI returned {len(words)} words: {[w.get('word', '') for w in words]}")
             fresh_words = []
+            skipped = []
             for w in words:
                 word = w.get("word", "").strip()
-                if word and not is_word_used(word) and len(word.split()) == 1:
-                    w["level"] = random.choice(WORD_LEVELS)
-                    fresh_words.append(w)
+                if not word:
+                    skipped.append("(empty)")
+                    continue
+                if len(word.split()) > 1:
+                    skipped.append(f"{word}(multi-word)")
+                    continue
+                if is_word_used(word):
+                    skipped.append(f"{word}(already used)")
+                    continue
+                w["level"] = random.choice(WORD_LEVELS)
+                fresh_words.append(w)
                 if len(fresh_words) >= num_words:
                     break
+            if skipped:
+                print(f"[api] Skipped: {', '.join(skipped)}")
             if len(fresh_words) >= num_words:
                 add_words_to_history([w["word"] for w in fresh_words[:num_words]])
                 print(f"[api] SUCCESS: Got {len(fresh_words)} fresh words on attempt {attempt + 1}")
@@ -105,7 +143,7 @@ Return ONLY valid JSON array. Do NOT repeat any words."""
                 print(f"[api] Only got {len(fresh_words)}/{num_words} fresh words, retrying...")
         except Exception as e:
             print(f"[api] Attempt {attempt + 1}/{max_attempts} FAILED: {type(e).__name__}: {e}")
-    raise RuntimeError("API failed all attempts - cannot generate words without API. Check POLLINATIONS_API_KEY and AI_MODEL in .env")
+    raise RuntimeError("API failed all attempts - cannot generate words. Check POLLINATIONS_API_KEY and AI_MODEL in .env")
 
 
 def create_background():
