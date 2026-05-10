@@ -252,6 +252,7 @@ def get_multiline_text_bbox(draw, lines, font):
     # Get single character bbox for line height
     char_bbox = draw.textbbox((0, 0), "A", font=font)
     line_height = char_bbox[3] - char_bbox[1]
+    line_spacing = int(line_height * 1.4)
     
     # Find max width
     max_width = 0
@@ -261,7 +262,7 @@ def get_multiline_text_bbox(draw, lines, font):
         if line_w > max_width:
             max_width = line_w
     
-    total_height = len(lines) * line_height
+    total_height = (len(lines) - 1) * line_spacing + line_height
     return (0, 0, max_width, total_height)
 
 
@@ -269,10 +270,11 @@ def draw_centered_text_in_box(img_draw, text, font, box_x, box_y, box_width, box
     """Draw text perfectly centered in a box with equal padding on all sides"""
     lines = wrap_text(img_draw, text, font, box_width - (padding * 2))
     
-    # Get accurate text dimensions
+    # Get accurate text dimensions with proper line spacing
     char_bbox = img_draw.textbbox((0, 0), "A", font=font)
     line_height = char_bbox[3] - char_bbox[1]
-    text_total_height = len(lines) * line_height
+    line_spacing = int(line_height * 1.4)
+    text_total_height = (len(lines) - 1) * line_spacing + line_height
     
     # Calculate centered starting position
     # Equal padding top and bottom
@@ -281,10 +283,10 @@ def draw_centered_text_in_box(img_draw, text, font, box_x, box_y, box_width, box
     
     # Draw each line
     for i, line in enumerate(lines):
-        line_y = box_y + actual_padding_top + (i * line_height) + (line_height // 2)
+        line_y = box_y + actual_padding_top + (i * line_spacing) + (line_height // 2)
         img_draw.text((box_x + box_width // 2, line_y), line, fill=fill_color, font=font, anchor="mm")
     
-    return len(lines) * (line_height + 5)
+    return len(lines) * (line_spacing + 5)
 
 
 def generate_word_image(word_data: dict, bg_image, output_path: str):
@@ -427,7 +429,8 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     
     char_bbox = draw.textbbox((0, 0), "A", font=font_def)
     line_height = char_bbox[3] - char_bbox[1]
-    text_height = def_lines_count * line_height
+    line_spacing = int(line_height * 1.4)
+    text_height = (def_lines_count - 1) * line_spacing + line_height
     
     # BIG equal padding
     padding = 35
@@ -437,9 +440,9 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     def_draw = ImageDraw.Draw(def_box)
     def_draw.rounded_rectangle([(0, 0), (CONTENT_WIDTH, def_box_h)], radius=18, fill=(65, 50, 95, 255))
 
-    # Draw each line centered
+    # Draw each line centered with proper spacing
     for i, line in enumerate(def_lines):
-        line_y = padding + (i * line_height) + (line_height // 2)
+        line_y = padding + (i * line_spacing) + (line_height // 2)
         def_draw.text((CONTENT_WIDTH // 2, line_y), line, fill=(255, 255, 255), font=font_def, anchor="mm")
 
     img.paste(def_box, (MARGIN_X, y_cursor), def_box)
@@ -455,7 +458,8 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     
     ex_char_bbox = draw.textbbox((0, 0), "A", font=font_ex)
     ex_line_height = ex_char_bbox[3] - ex_char_bbox[1]
-    ex_text_height = ex_lines_count * ex_line_height
+    ex_line_spacing = int(ex_line_height * 1.4)
+    ex_text_height = (ex_lines_count - 1) * ex_line_spacing + ex_line_height
     
     # BIG equal padding
     ex_padding = 30
@@ -465,9 +469,9 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     ex_draw = ImageDraw.Draw(ex_box)
     ex_draw.rounded_rectangle([(0, 0), (CONTENT_WIDTH, ex_box_h)], radius=15, fill=(95, 80, 125, 220))
 
-    # Draw each line centered
+    # Draw each line centered with proper spacing
     for i, line in enumerate(ex_lines):
-        line_y = ex_padding + (i * ex_line_height) + (ex_line_height // 2)
+        line_y = ex_padding + (i * ex_line_spacing) + (ex_line_height // 2)
         ex_draw.text((CONTENT_WIDTH // 2, line_y), line, fill=(255, 255, 255), font=font_ex, anchor="mm")
 
     img.paste(ex_box, (MARGIN_X, y_cursor), ex_box)
@@ -500,7 +504,8 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         
         ff_char_bbox = draw.textbbox((0, 0), "A", font=font_ff)
         ff_line_height = ff_char_bbox[3] - ff_char_bbox[1]
-        ff_text_height = len(ff_lines) * ff_line_height
+        ff_line_spacing = int(ff_line_height * 1.4)
+        ff_text_height = (len(ff_lines) - 1) * ff_line_spacing + ff_line_height
         
         ff_padding = 22
         ff_box_h = ff_text_height + (ff_padding * 2)
@@ -510,7 +515,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         ff_draw.rounded_rectangle([(0, 0), (CONTENT_WIDTH, ff_box_h)], radius=14, fill=(255, 210, 160, 200))
 
         for i, line in enumerate(ff_lines):
-            line_y = ff_padding + (i * ff_line_height) + (ff_line_height // 2)
+            line_y = ff_padding + (i * ff_line_spacing) + (ff_line_height // 2)
             ff_draw.text((CONTENT_WIDTH // 2, line_y), line, fill=(70, 45, 25), font=font_ff, anchor="mm")
 
         img.paste(ff_box, (MARGIN_X, y_cursor), ff_box)

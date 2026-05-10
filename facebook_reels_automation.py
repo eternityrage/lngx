@@ -1117,7 +1117,9 @@ def generate_complete_image(phrase_data: dict, category_english: str, output_pat
     # English text
     english_y = 470
     english_lines = wrap_text(english, font_large, VIDEO_WIDTH - 140)
-    total_height = len(english_lines) * 95
+    line_height_en = 95
+    line_spacing_en = int(line_height_en * 1.4)
+    total_height = (len(english_lines) - 1) * line_spacing_en + line_height_en
 
     draw.rectangle(
         [(60, english_y - 55), (VIDEO_WIDTH - 60, english_y + total_height + 15)],
@@ -1125,7 +1127,7 @@ def generate_complete_image(phrase_data: dict, category_english: str, output_pat
     )
 
     for i, line in enumerate(english_lines):
-        y_pos = english_y + (i * 95)
+        y_pos = english_y + (i * line_spacing_en)
         draw.text(
             (VIDEO_WIDTH // 2, y_pos),
             line,
@@ -1181,7 +1183,8 @@ def generate_complete_image(phrase_data: dict, category_english: str, output_pat
             telugu_lines = [telugu]
 
         line_spacing = 85
-        total_height = len(telugu_lines) * line_spacing
+        line_spacing_telugu = int(line_spacing * 1.4)
+        total_height = (len(telugu_lines) - 1) * line_spacing_telugu + line_spacing
 
         telugu_padding = 60
         draw.rectangle(
@@ -1197,11 +1200,13 @@ def generate_complete_image(phrase_data: dict, category_english: str, output_pat
                 stroke_width=2
             )
             x_pos = (VIDEO_WIDTH - rendered.width) // 2
-            y_pos = telugu_y + (i * line_spacing) - rendered.height // 2
+            y_pos = telugu_y + (i * line_spacing_telugu) - rendered.height // 2
             img.paste(rendered, (x_pos, y_pos), rendered)
     else:
         telugu_lines = wrap_text(telugu, font_telugu, VIDEO_WIDTH - 200)
-        total_height = len(telugu_lines) * 75
+        line_height_te = 75
+        line_spacing_te = int(line_height_te * 1.4)
+        total_height = (len(telugu_lines) - 1) * line_spacing_te + line_height_te
 
         telugu_padding = 60
         draw.rectangle(
@@ -1210,7 +1215,7 @@ def generate_complete_image(phrase_data: dict, category_english: str, output_pat
         )
 
         for i, line in enumerate(telugu_lines):
-            y_pos = telugu_y + (i * 75)
+            y_pos = telugu_y + (i * line_spacing_te)
             draw.text(
                 (VIDEO_WIDTH // 2, y_pos),
                 line,
@@ -1227,14 +1232,16 @@ def generate_complete_image(phrase_data: dict, category_english: str, output_pat
     transliteration_lines = wrap_text(transliteration_text, font_transliteration, VIDEO_WIDTH - 160)
 
     if transliteration_lines:
-        transliteration_total_height = len(transliteration_lines) * 60
+        line_height_trans = 60
+        line_spacing_trans = int(line_height_trans * 1.4)
+        transliteration_total_height = (len(transliteration_lines) - 1) * line_spacing_trans + line_height_trans
         draw.rectangle(
             [(70, transliteration_y - 25), (VIDEO_WIDTH - 70, transliteration_y + transliteration_total_height + 15)],
             fill=(40, 40, 40, 230)
         )
 
         for i, transliteration_line in enumerate(transliteration_lines):
-            y_pos = transliteration_y + (i * 60)
+            y_pos = transliteration_y + (i * line_spacing_trans)
             draw.text(
                 (VIDEO_WIDTH // 2, y_pos),
                 transliteration_line,
