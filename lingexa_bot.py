@@ -299,7 +299,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     img = bg_image.copy().convert('RGBA')
     draw = ImageDraw.Draw(img)
 
-    MARGIN_X = 100
+    MARGIN_X = 140
     CENTER_X = VIDEO_WIDTH // 2
     CONTENT_WIDTH = VIDEO_WIDTH - (MARGIN_X * 2)
 
@@ -382,20 +382,20 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     level = word_data.get("level", "")
 
     # === START WITH BIG GAP FROM TOP ===
-    y_cursor = 200
+    y_cursor = 250
 
     # Header bar
     draw.rectangle([(0, 0), (VIDEO_WIDTH, 90)], fill=(45, 35, 65))
     draw.text((CENTER_X, 45), CHANNEL_NAME.upper(), fill=(255, 255, 255), font=font_header, anchor="mm")
     
     # === GAP AFTER HEADER ===
-    y_cursor = 220
+    y_cursor = 280
 
     # Word
     word_bbox = draw.textbbox((0, 0), word, font=font_word)
     word_h = word_bbox[3] - word_bbox[1]
     draw.text((CENTER_X, y_cursor), word, fill=(25, 20, 45), font=font_word, anchor="mm", stroke_width=4, stroke_fill=(200, 190, 180))
-    y_cursor += word_h + 35
+    y_cursor += word_h + 50
 
     # Level badge
     if level:
@@ -408,7 +408,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
             radius=10, fill=(90, 70, 130)
         )
         draw.text((CENTER_X, y_cursor + level_h // 2 + 8), level_text, fill=(255, 255, 255), font=font_level, anchor="mm")
-        y_cursor += level_h + 40
+        y_cursor += level_h + 55
 
     # Part of speech
     if pos:
@@ -421,14 +421,14 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
             radius=12, fill=(75, 55, 115)
         )
         draw.text((CENTER_X, y_cursor + pos_h // 2 + 10), pos_text, fill=(255, 245, 140), font=font_pos, anchor="mm")
-        y_cursor += pos_h + 55
+        y_cursor += pos_h + 70
 
     # === DEFINITION - PERFECTLY CENTERED ===
     def_label = "MEANING"
     draw.text((MARGIN_X, y_cursor), def_label, fill=(80, 65, 105), font=font_def_label, anchor="lm")
-    y_cursor += 50
+    y_cursor += 60
 
-    def_lines = wrap_text(draw, definition, font_def, CONTENT_WIDTH - 80)
+    def_lines = wrap_text(draw, definition, font_def, CONTENT_WIDTH - 100)
     def_lines_count = len(def_lines)
     
     char_bbox = draw.textbbox((0, 0), "A", font=font_def)
@@ -437,7 +437,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     text_height = (def_lines_count - 1) * line_spacing + line_height
     
     # BIG equal padding
-    padding = 40
+    padding = 50
     def_box_h = text_height + (padding * 2)
 
     def_box = Image.new('RGBA', (CONTENT_WIDTH, def_box_h), (65, 50, 95, 255))
@@ -450,14 +450,14 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         def_draw.text((CONTENT_WIDTH // 2, line_y), line, fill=(255, 255, 255), font=font_def, anchor="mm")
 
     img.paste(def_box, (MARGIN_X, y_cursor), def_box)
-    y_cursor += def_box_h + 50
+    y_cursor += def_box_h + 70
 
     # === EXAMPLE - PERFECTLY CENTERED ===
     ex_label = "EXAMPLE"
     draw.text((MARGIN_X, y_cursor), ex_label, fill=(80, 65, 105), font=font_ex_label, anchor="lm")
-    y_cursor += 50
+    y_cursor += 60
 
-    ex_lines = wrap_text(draw, example, font_ex, CONTENT_WIDTH - 80)
+    ex_lines = wrap_text(draw, example, font_ex, CONTENT_WIDTH - 100)
     ex_lines_count = len(ex_lines)
     
     ex_char_bbox = draw.textbbox((0, 0), "A", font=font_ex)
@@ -466,7 +466,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     ex_text_height = (ex_lines_count - 1) * ex_line_spacing + ex_line_height
     
     # BIG equal padding
-    ex_padding = 35
+    ex_padding = 45
     ex_box_h = ex_text_height + (ex_padding * 2)
 
     ex_box = Image.new('RGBA', (CONTENT_WIDTH, ex_box_h), (95, 80, 125, 220))
@@ -479,16 +479,16 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         ex_draw.text((CONTENT_WIDTH // 2, line_y), line, fill=(255, 255, 255), font=font_ex, anchor="mm")
 
     img.paste(ex_box, (MARGIN_X, y_cursor), ex_box)
-    y_cursor += ex_box_h + 50
+    y_cursor += ex_box_h + 70
 
     # Synonyms
     if synonyms:
         syn_label = "SYNONYMS"
         draw.text((MARGIN_X, y_cursor), syn_label, fill=(80, 65, 105), font=font_syn_label, anchor="lm")
-        y_cursor += 50
+        y_cursor += 60
 
         syn_text = ", ".join(synonyms[:4])
-        syn_lines = wrap_text(draw, syn_text, font_syn, CONTENT_WIDTH - 80)
+        syn_lines = wrap_text(draw, syn_text, font_syn, CONTENT_WIDTH - 100)
 
         for i, line in enumerate(syn_lines):
             syn_char_bbox = draw.textbbox((0, 0), "A", font=font_syn)
@@ -496,22 +496,22 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
             line_y = y_cursor + (i * syn_line_height) + (syn_line_height // 2)
             draw.text((CENTER_X, line_y), line, fill=(55, 45, 85), font=font_syn, anchor="mm")
 
-        y_cursor += len(syn_lines) * syn_line_height + 45
+        y_cursor += len(syn_lines) * syn_line_height + 60
 
     # Fun fact
     if fun_fact:
         ff_label = "DID YOU KNOW?"
         draw.text((MARGIN_X, y_cursor), ff_label, fill=(110, 75, 55), font=font_ff_label, anchor="lm")
-        y_cursor += 50
+        y_cursor += 60
 
-        ff_lines = wrap_text(draw, fun_fact, font_ff, CONTENT_WIDTH - 80)
+        ff_lines = wrap_text(draw, fun_fact, font_ff, CONTENT_WIDTH - 100)
         
         ff_char_bbox = draw.textbbox((0, 0), "A", font=font_ff)
         ff_line_height = ff_char_bbox[3] - ff_char_bbox[1]
         ff_line_spacing = int(ff_line_height * 1.4)
         ff_text_height = (len(ff_lines) - 1) * ff_line_spacing + ff_line_height
         
-        ff_padding = 28
+        ff_padding = 35
         ff_box_h = ff_text_height + (ff_padding * 2)
 
         ff_box = Image.new('RGBA', (CONTENT_WIDTH, ff_box_h), (255, 210, 160, 200))
