@@ -313,7 +313,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     img = bg_image.copy().convert('RGBA')
     draw = ImageDraw.Draw(img)
 
-    MARGIN_X = 130
+    MARGIN_X = 90
     CENTER_X = VIDEO_WIDTH // 2
     CONTENT_WIDTH = VIDEO_WIDTH - (MARGIN_X * 2)
 
@@ -442,7 +442,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     draw.text((MARGIN_X, y_cursor), def_label, fill=(80, 65, 105), font=font_def_label, anchor="lm")
     y_cursor += 60
 
-    def_lines = wrap_text(draw, definition, font_def, CONTENT_WIDTH - 100)
+    def_lines = wrap_text(draw, definition, font_def, CONTENT_WIDTH - 70)
     def_lines_count = len(def_lines)
     
     char_bbox = draw.textbbox((0, 0), "A", font=font_def)
@@ -471,7 +471,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     draw.text((MARGIN_X, y_cursor), ex_label, fill=(80, 65, 105), font=font_ex_label, anchor="lm")
     y_cursor += 60
 
-    ex_lines = wrap_text(draw, example, font_ex, CONTENT_WIDTH - 100)
+    ex_lines = wrap_text(draw, example, font_ex, CONTENT_WIDTH - 70)
     ex_lines_count = len(ex_lines)
     
     ex_char_bbox = draw.textbbox((0, 0), "A", font=font_ex)
@@ -502,7 +502,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         y_cursor += 60
 
         syn_text = ", ".join(synonyms[:4])
-        syn_lines = wrap_text(draw, syn_text, font_syn, CONTENT_WIDTH - 100)
+        syn_lines = wrap_text(draw, syn_text, font_syn, CONTENT_WIDTH - 70)
 
         for i, line in enumerate(syn_lines):
             syn_char_bbox = draw.textbbox((0, 0), "A", font=font_syn)
@@ -518,7 +518,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         draw.text((MARGIN_X, y_cursor), ff_label, fill=(110, 75, 55), font=font_ff_label, anchor="lm")
         y_cursor += 60
 
-        ff_lines = wrap_text(draw, fun_fact, font_ff, CONTENT_WIDTH - 100)
+        ff_lines = wrap_text(draw, fun_fact, font_ff, CONTENT_WIDTH - 70)
         
         ff_char_bbox = draw.textbbox((0, 0), "A", font=font_ff)
         ff_line_height = ff_char_bbox[3] - ff_char_bbox[1]
