@@ -67,8 +67,12 @@ def is_word_used(word):
 
 def add_words_to_history(words):
     history = load_word_history()
+    existing = [w.lower().strip() for w in history.get("words", [])]
     for w in words:
-        history["words"].append(w.lower().strip())
+        word_lower = w.lower().strip()
+        if word_lower not in existing:
+            history["words"].append(word_lower)
+            existing.append(word_lower)
     save_word_history(history)
 
 
@@ -295,7 +299,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     img = bg_image.copy().convert('RGBA')
     draw = ImageDraw.Draw(img)
 
-    MARGIN_X = 70
+    MARGIN_X = 100
     CENTER_X = VIDEO_WIDTH // 2
     CONTENT_WIDTH = VIDEO_WIDTH - (MARGIN_X * 2)
 
@@ -424,7 +428,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     draw.text((MARGIN_X, y_cursor), def_label, fill=(80, 65, 105), font=font_def_label, anchor="lm")
     y_cursor += 50
 
-    def_lines = wrap_text(draw, definition, font_def, CONTENT_WIDTH - 60)
+    def_lines = wrap_text(draw, definition, font_def, CONTENT_WIDTH - 80)
     def_lines_count = len(def_lines)
     
     char_bbox = draw.textbbox((0, 0), "A", font=font_def)
@@ -433,7 +437,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     text_height = (def_lines_count - 1) * line_spacing + line_height
     
     # BIG equal padding
-    padding = 35
+    padding = 40
     def_box_h = text_height + (padding * 2)
 
     def_box = Image.new('RGBA', (CONTENT_WIDTH, def_box_h), (65, 50, 95, 255))
@@ -453,7 +457,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     draw.text((MARGIN_X, y_cursor), ex_label, fill=(80, 65, 105), font=font_ex_label, anchor="lm")
     y_cursor += 50
 
-    ex_lines = wrap_text(draw, example, font_ex, CONTENT_WIDTH - 60)
+    ex_lines = wrap_text(draw, example, font_ex, CONTENT_WIDTH - 80)
     ex_lines_count = len(ex_lines)
     
     ex_char_bbox = draw.textbbox((0, 0), "A", font=font_ex)
@@ -462,7 +466,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     ex_text_height = (ex_lines_count - 1) * ex_line_spacing + ex_line_height
     
     # BIG equal padding
-    ex_padding = 30
+    ex_padding = 35
     ex_box_h = ex_text_height + (ex_padding * 2)
 
     ex_box = Image.new('RGBA', (CONTENT_WIDTH, ex_box_h), (95, 80, 125, 220))
@@ -484,7 +488,7 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         y_cursor += 50
 
         syn_text = ", ".join(synonyms[:4])
-        syn_lines = wrap_text(draw, syn_text, font_syn, CONTENT_WIDTH - 60)
+        syn_lines = wrap_text(draw, syn_text, font_syn, CONTENT_WIDTH - 80)
 
         for i, line in enumerate(syn_lines):
             syn_char_bbox = draw.textbbox((0, 0), "A", font=font_syn)
@@ -500,14 +504,14 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
         draw.text((MARGIN_X, y_cursor), ff_label, fill=(110, 75, 55), font=font_ff_label, anchor="lm")
         y_cursor += 50
 
-        ff_lines = wrap_text(draw, fun_fact, font_ff, CONTENT_WIDTH - 60)
+        ff_lines = wrap_text(draw, fun_fact, font_ff, CONTENT_WIDTH - 80)
         
         ff_char_bbox = draw.textbbox((0, 0), "A", font=font_ff)
         ff_line_height = ff_char_bbox[3] - ff_char_bbox[1]
         ff_line_spacing = int(ff_line_height * 1.4)
         ff_text_height = (len(ff_lines) - 1) * ff_line_spacing + ff_line_height
         
-        ff_padding = 22
+        ff_padding = 28
         ff_box_h = ff_text_height + (ff_padding * 2)
 
         ff_box = Image.new('RGBA', (CONTENT_WIDTH, ff_box_h), (255, 210, 160, 200))
