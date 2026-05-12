@@ -90,7 +90,12 @@
     "blueprint",
     "prototype",
     "escalate",
-    "overhead"
+    "overhead",
+    "disseminate",
+    "renegotiate",
+    "escalation",
+    "outsource",
+    "appraisal"
   ],
-  "last_updated": "2026-05-12T00:13:55.841757"
+  "last_updated": "2026-05-12T10:21:39.102800"
 }
