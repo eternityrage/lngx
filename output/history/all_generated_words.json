@@ -195,7 +195,12 @@
     "replicate",
     "abstract",
     "qualitative",
-    "quantitative"
+    "quantitative",
+    "spectrum",
+    "notation",
+    "dimension",
+    "modulate",
+    "axiomatic"
   ],
-  "last_updated": "2026-05-15T16:18:16.379722"
+  "last_updated": "2026-05-15T18:16:00.241596"
 }
