@@ -230,7 +230,12 @@
     "sonnet",
     "canvas",
     "palette",
-    "stanza"
+    "stanza",
+    "epigram",
+    "vernacular",
+    "ode",
+    "stylize",
+    "haiku"
   ],
-  "last_updated": "2026-05-16T20:08:52.270553"
+  "last_updated": "2026-05-16T23:37:45.849047"
 }
