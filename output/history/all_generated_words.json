@@ -760,7 +760,12 @@
     "processor",
     "latency",
     "domain",
-    "analytic"
+    "analytic",
+    "acculturation",
+    "counterculture",
+    "nationalism",
+    "multiculturalism",
+    "indigenous"
   ],
-  "last_updated": "2026-06-05T19:01:50.624128"
+  "last_updated": "2026-06-05T22:09:42.105129"
 }
