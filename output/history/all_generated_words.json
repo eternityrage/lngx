@@ -740,7 +740,12 @@
     "quartic",
     "topology",
     "unimodal",
-    "viscosity"
+    "viscosity",
+    "verdant",
+    "tundra",
+    "arid",
+    "glacier",
+    "canopy"
   ],
-  "last_updated": "2026-06-05T05:21:20.891607"
+  "last_updated": "2026-06-05T08:41:56.529365"
 }
