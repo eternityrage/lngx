@@ -750,7 +750,12 @@
     "predator",
     "prey",
     "flora",
-    "fauna"
+    "fauna",
+    "atmosphere",
+    "hydrology",
+    "meteorology",
+    "terrestrial",
+    "aquatic"
   ],
-  "last_updated": "2026-06-05T11:58:04.134543"
+  "last_updated": "2026-06-05T15:57:51.983524"
 }
