@@ -780,7 +780,12 @@
     "decay",
     "erosion",
     "recycle",
-    "sustainable"
+    "sustainable",
+    "biome",
+    "climate",
+    "photosynthesis",
+    "symbiosis",
+    "aquifer"
   ],
-  "last_updated": "2026-06-06T10:51:25.005103"
+  "last_updated": "2026-06-06T14:44:17.690367"
 }
