@@ -900,7 +900,12 @@
     "customs",
     "socialize",
     "influence",
-    "expression"
+    "expression",
+    "status",
+    "gender",
+    "ethnicity",
+    "language",
+    "art"
   ],
-  "last_updated": "2026-06-10T12:16:18.585069"
+  "last_updated": "2026-06-10T16:37:12.363102"
 }
