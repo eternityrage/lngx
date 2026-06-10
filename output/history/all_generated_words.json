@@ -905,7 +905,12 @@
     "gender",
     "ethnicity",
     "language",
-    "art"
+    "art",
+    "cynical",
+    "honest",
+    "humble",
+    "irritable",
+    "judgemental"
   ],
-  "last_updated": "2026-06-10T16:37:12.363102"
+  "last_updated": "2026-06-10T19:41:37.771327"
 }
