@@ -36,7 +36,7 @@ WORDS_PER_VIDEO = 5
 WORD_HISTORY_FILE = HISTORY_DIR / "all_generated_words.json"
 FONTS_DIR = Path(__file__).parent / "fonts"
 
-WORD_LEVELS = ["Beginner", "Intermediate", "Advanced", "GRE", "SAT", "TOEFL"]
+WORD_LEVELS = ["Beginner", "Intermediate", "Advanced", "GRE", "GMAT", "SAT", "TOEFL", "IELTS"]
 
 def load_word_history():
     if WORD_HISTORY_FILE.exists():
@@ -68,7 +68,7 @@ def add_words_to_history(words):
 
 
 def generate_word_data(num_words: int = WORDS_PER_VIDEO) -> list:
-    max_attempts = 10
+    max_attempts = 30
     categories = [
         "business and professional",
         "academic and scientific",
@@ -80,32 +80,50 @@ def generate_word_data(num_words: int = WORDS_PER_VIDEO) -> list:
         "technical and modern",
         "nature and environment",
         "character and personality",
+        "medical and health",
+        "legal and political",
+        "culinary and food",
+        "sports and fitness",
+        "music and performing arts",
+        "architecture and design",
+        "ancient history and mythology",
+        "astronomy and space",
+        "fashion and textiles",
+        "maritime and nautical",
+        "IELTS preparation",
+        "GMAT preparation",
     ]
+    collected = []
     for attempt in range(max_attempts):
         try:
             import requests
             url = "https://gen.pollinations.ai/v1/chat/completions"
             headers = {"Authorization": f"Bearer {POLLINATIONS_API_KEY}", "Content-Type": "application/json"}
             category = categories[attempt % len(categories)]
-            print(f"[api] Attempt {attempt + 1}/{max_attempts}: Model={AI_MODEL}, Category={category}")
+            remaining = num_words - len(collected)
+            print(f"[api] Attempt {attempt + 1}/{max_attempts}: Model={AI_MODEL}, Category={category} (need {remaining} more)")
             history = load_word_history()
             all_used = history.get("words", [])
-            recent_used = all_used[-50:] if len(all_used) > 50 else all_used
-            print(f"[api] History: {len(all_used)} total words, sending {len(recent_used)} recent to API")
+            recent_used = all_used[-100:] if len(all_used) > 100 else all_used
+            used_set = set()
+            for w in all_used:
+                used_set.add(w.lower().strip())
+            print(f"[api] History: {len(all_used)} total used words, sending {len(recent_used)} recent to API")
             used_list = ", ".join(recent_used) if recent_used else "(none yet)"
-            prompt = f"""Generate exactly 15 unique English vocabulary words from the {category} domain.
+            prompt = f"""Generate exactly 20 unique English vocabulary words from the {category} domain.
 
 STRICT RULES:
-- NEVER repeat these words: {used_list}
-- Each word must be a single word (no phrases, no hyphens)
+- NEVER repeat any of these words: {used_list}
+- Each word must be a single word (no phrases, no hyphens, no spaces)
 - Return ONLY a valid JSON array
 - Every word must be different from all others in your response
+- Choose OBSCURE and UNCOMMON words - avoid the most obvious ones
 
 Format for each word:
 {{"word": "word", "part_of_speech": "noun/verb/adjective/adverb", "definition": "simple definition under 12 words", "example": "example sentence under 10 words", "synonyms": ["syn1", "syn2"], "fun_fact": "short interesting fact"}}
 
 Return ONLY the JSON array. Nothing else."""
-            payload = {"model": AI_MODEL, "messages": [{"role": "system", "content": "You are an English vocabulary generator. Return ONLY valid JSON arrays."}, {"role": "user", "content": prompt}], "temperature": 1.2}
+            payload = {"model": AI_MODEL, "messages": [{"role": "system", "content": "You are an English vocabulary generator. Return ONLY valid JSON arrays."}, {"role": "user", "content": prompt}], "temperature": 1.5}
             response = requests.post(url, headers=headers, json=payload, timeout=60)
             response.raise_for_status()
             data = response.json()
@@ -116,7 +134,7 @@ Return ONLY the JSON array. Nothing else."""
                 content = content.split("```")[1].split("```")[0].strip()
             words = json.loads(content)
             print(f"[api] AI returned {len(words)} words: {[w.get('word', '') for w in words]}")
-            fresh_words = []
+            fresh_this_round = []
             skipped = []
             for w in words:
                 word = w.get("word", "").strip()
@@ -126,23 +144,30 @@ Return ONLY the JSON array. Nothing else."""
                 if len(word.split()) > 1:
                     skipped.append(f"{word}(multi-word)")
                     continue
-                if is_word_used(word):
+                word_lower = word.lower().strip()
+                if word_lower in used_set:
                     skipped.append(f"{word}(already used)")
                     continue
                 w["level"] = random.choice(WORD_LEVELS)
-                fresh_words.append(w)
-                if len(fresh_words) >= num_words:
+                fresh_this_round.append(w)
+                used_set.add(word_lower)
+                if len(collected) + len(fresh_this_round) >= num_words:
                     break
             if skipped:
                 print(f"[api] Skipped: {', '.join(skipped)}")
-            if len(fresh_words) >= num_words:
-                add_words_to_history([w["word"] for w in fresh_words[:num_words]])
-                print(f"[api] SUCCESS: Got {len(fresh_words)} fresh words on attempt {attempt + 1}")
-                return fresh_words[:num_words]
+            collected.extend(fresh_this_round)
+            if len(collected) >= num_words:
+                add_words_to_history([w["word"] for w in collected[:num_words]])
+                print(f"[api] SUCCESS: Got {len(collected)} fresh words on attempt {attempt + 1}")
+                return collected[:num_words]
             else:
-                print(f"[api] Only got {len(fresh_words)}/{num_words} fresh words, retrying...")
+                print(f"[api] Collected {len(collected)}/{num_words} so far, retrying with different category...")
         except Exception as e:
             print(f"[api] Attempt {attempt + 1}/{max_attempts} FAILED: {type(e).__name__}: {e}")
+    if collected:
+        print(f"[api] WARNING: Only got {len(collected)}/{num_words} words after {max_attempts} attempts, using partial set")
+        add_words_to_history([w["word"] for w in collected])
+        return collected
     raise RuntimeError("API failed all attempts - cannot generate words. Check POLLINATIONS_API_KEY and AI_MODEL in .env")
 
 
@@ -405,10 +430,20 @@ def generate_word_image(word_data: dict, bg_image, output_path: str):
     # === GAP AFTER HEADER ===
     y_cursor = 260
 
-    # Word
-    word_bbox = draw.textbbox((0, 0), word, font=font_word)
+    # Word - dynamically size to prevent cropping
+    MAX_WORD_WIDTH = VIDEO_WIDTH - MARGIN_X * 2
+    word_font_size = 150
+    word_font = font_word
+    word_width = draw.textbbox((0, 0), word, font=word_font)[2]
+    while word_width > MAX_WORD_WIDTH and word_font_size > 40:
+        word_font_size -= 5
+        word_font = load_font(fonts_bold, word_font_size)
+        word_width = draw.textbbox((0, 0), word, font=word_font)[2]
+    if word_font_size != 150:
+        print(f"[word] Reduced '{word}' font to {word_font_size}pt (width: {word_width}/{MAX_WORD_WIDTH})")
+    word_bbox = draw.textbbox((0, 0), word, font=word_font)
     word_h = word_bbox[3] - word_bbox[1]
-    draw.text((CENTER_X, y_cursor), word, fill=(25, 20, 45), font=font_word, anchor="mm", stroke_width=4, stroke_fill=(200, 190, 180))
+    draw.text((CENTER_X, y_cursor), word, fill=(25, 20, 45), font=word_font, anchor="mm", stroke_width=max(1, word_font_size // 40), stroke_fill=(200, 190, 180))
     y_cursor += word_h + 50
 
     # Level badge
