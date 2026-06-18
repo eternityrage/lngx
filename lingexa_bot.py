@@ -92,8 +92,24 @@ def generate_word_data(num_words: int = WORDS_PER_VIDEO) -> list:
         "maritime and nautical",
         "IELTS preparation",
         "GMAT preparation",
+        "psychology and behavior",
+        "economics and finance",
+        "geography and geology",
+        "mathematics and logic",
+        "religion and spirituality",
+        "education and pedagogy",
+        "linguistics and language",
+        "anthropology and sociology",
+        "photography and film",
+        "theater and drama",
+        "biotechnology and genetics",
+        "robotics and artificial intelligence",
+        "engineering and mechanics",
+        "nutrition and wellness",
+        "neuroscience and brain",
     ]
     collected = []
+    collected_lower = set()
     for attempt in range(max_attempts):
         try:
             import requests
@@ -104,12 +120,22 @@ def generate_word_data(num_words: int = WORDS_PER_VIDEO) -> list:
             print(f"[api] Attempt {attempt + 1}/{max_attempts}: Model={AI_MODEL}, Category={category} (need {remaining} more)")
             history = load_word_history()
             all_used = history.get("words", [])
-            recent_used = all_used[-100:] if len(all_used) > 100 else all_used
             used_set = set()
             for w in all_used:
                 used_set.add(w.lower().strip())
-            print(f"[api] History: {len(all_used)} total used words, sending {len(recent_used)} recent to API")
-            used_list = ", ".join(recent_used) if recent_used else "(none yet)"
+            used_set.update(collected_lower)
+            if len(all_used) > 200:
+                random_seed = random.sample(all_used, 100)
+                recent_100 = all_used[-100:]
+                context_words = list(set(random_seed + recent_100))
+                random.shuffle(context_words)
+            elif len(all_used) > 100:
+                context_words = all_used[-100:]
+            else:
+                context_words = all_used
+            context_words.extend(collected)
+            print(f"[api] History: {len(all_used)} used + {len(collected)} collected this run, sending {len(context_words)} context words")
+            used_list = ", ".join(context_words) if context_words else "(none yet)"
             prompt = f"""Generate exactly 20 unique English vocabulary words from the {category} domain.
 
 STRICT RULES:
@@ -132,7 +158,14 @@ Return ONLY the JSON array. Nothing else."""
                 content = content.split("```json")[1].split("```")[0].strip()
             elif "```" in content:
                 content = content.split("```")[1].split("```")[0].strip()
-            words = json.loads(content)
+            try:
+                words = json.loads(content)
+            except json.JSONDecodeError:
+                print(f"[api] JSON parse failed, raw content preview: {content[:200]}")
+                raise
+            if not isinstance(words, list):
+                print(f"[api] Response is not a list, got: {type(words).__name__}")
+                raise ValueError("API did not return a JSON array")
             print(f"[api] AI returned {len(words)} words: {[w.get('word', '') for w in words]}")
             fresh_this_round = []
             skipped = []
@@ -156,12 +189,21 @@ Return ONLY the JSON array. Nothing else."""
             if skipped:
                 print(f"[api] Skipped: {', '.join(skipped)}")
             collected.extend(fresh_this_round)
+            for w in fresh_this_round:
+                collected_lower.add(w["word"].lower().strip())
             if len(collected) >= num_words:
                 add_words_to_history([w["word"] for w in collected[:num_words]])
                 print(f"[api] SUCCESS: Got {len(collected)} fresh words on attempt {attempt + 1}")
                 return collected[:num_words]
             else:
                 print(f"[api] Collected {len(collected)}/{num_words} so far, retrying with different category...")
+        except json.JSONDecodeError:
+            print(f"[api] Attempt {attempt + 1}/{max_attempts} SKIPPED (bad JSON), retrying...")
+        except requests.exceptions.HTTPError as e:
+            status = e.response.status_code if e.response is not None else "?"
+            print(f"[api] Attempt {attempt + 1}/{max_attempts} HTTP {status}, retrying...")
+            if status in (401, 402, 403):
+                print(f"[api] HTTP {status} indicates auth/payment issue, but continuing retries in case it's transient...")
         except Exception as e:
             print(f"[api] Attempt {attempt + 1}/{max_attempts} FAILED: {type(e).__name__}: {e}")
     if collected:
