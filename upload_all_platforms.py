@@ -280,50 +280,46 @@ def upload_to_all_platforms(video_path, caption, word, reel_data=None):
     return results
 
 
+
+PUBLISHED_LOG = "published_videos.json"
+
+def get_published():
+    if os.path.exists(PUBLISHED_LOG):
+        with open(PUBLISHED_LOG, "r", encoding="utf-8") as f:
+            try:
+                return json.load(f)
+            except:
+                return []
+    return []
+
+def save_published(word, video_name):
+    published = get_published()
+    published.append({"word": word, "video": video_name, "time": datetime.now().isoformat()})
+    with open(PUBLISHED_LOG, "w", encoding="utf-8") as f:
+        json.dump(published, f, indent=2)
+
+
 def main():
-    print("\n" + "="*80)
-    print("LINGEXA - AUTOMATED UPLOAD")
-    print("="*80)
-
     reel = get_latest_reel()
-
     if not reel:
-        print("\nNo reel found! Run lingexa_bot.py first.")
+        print("No reel found!")
         sys.exit(1)
 
-    print(f"\nFound latest reel:")
-    print(f"   Word: {reel['word']}")
-    print(f"   Words count: {len(reel.get('words', []))}")
-    print(f"   Video: {reel['video_path']}")
+    word = reel['word']
+    published = get_published()
+    published_words = [p.get("word", "") for p in published]
+
+    if word in published_words:
+        print("Word '" + word + "' already published! Skipping upload.")
+        return
 
     caption = generate_caption(reel, platform="facebook")
-    print(f"\nGenerated caption ({len(caption)} chars):")
-    print("-"*80)
-    print(caption[:500] + "..." if len(caption) > 500 else caption)
-    print("-"*80)
-
-    results = upload_to_all_platforms(
-        reel['video_path'],
-        caption,
-        reel['word'],
-        reel
-    )
-
-    successful = len(results.get("platforms_successful", []))
-    failed = len(results.get("platforms_failed", []))
-    skipped = len(results.get("platforms_skipped", []))
-
-    if successful > 0:
-        print(f"\nUpload complete! {successful} platform(s) successful.")
-        if skipped > 0:
-            print(f"{skipped} platform(s) skipped - add credentials to enable them")
-        sys.exit(0)
-    elif failed > 0:
-        print(f"\nAll attempted uploads failed ({failed} failed, {skipped} skipped).")
-        sys.exit(1)
-    else:
-        print(f"\nAll uploads skipped ({skipped} skipped).")
-        sys.exit(1)
+    print("Caption (" + str(len(caption)) + " chars)")
+    print(caption[:500])
+    result = upload_to_all_platforms(reel['video_path'], caption, word, reel)
+    if result.get("platforms_successful"):
+        save_published(word, reel['video_path'])
+        print("Published word: " + word)
 
 
 if __name__ == "__main__":
