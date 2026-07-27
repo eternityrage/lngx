@@ -1,4 +1,4 @@
-"""
+﻿"""
 Facebook Reels Automation - Bilingual English/Telugu Content Generator
 IMPROVED VERSION: Better backgrounds, English categories, no repeats, Velocity Telugu branding
 """
@@ -1253,7 +1253,7 @@ def generate_complete_image(phrase_data: dict, category_english: str, output_pat
     )
     draw.text(
         (VIDEO_WIDTH // 2, branding_y),
-        "VELOCITY TELUGU",
+        "LINGEXA",
         fill=(255, 255, 255),
         font=font_branding,
         anchor="mm",
@@ -1418,7 +1418,7 @@ def generate_reel(category_english: str = None):
 
 if __name__ == "__main__":
     print("\n" + "="*80)
-    print("VELOCITY TELUGU - FACEBOOK REELS AUTOMATION")
+    print("LINGEXA - FACEBOOK REELS AUTOMATION")
     print("="*80)
     print("\nFEATURES:")
     print("  - Natural pauses with commas (non-robotic TTS)")
