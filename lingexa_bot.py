@@ -130,12 +130,12 @@ def generate_word_data(num_words: int = WORDS_PER_VIDEO) -> list:
                 context_words = list(set(random_seed + recent_100))
                 random.shuffle(context_words)
             elif len(all_used) > 100:
-                context_words = all_used[-100:]
+                context_words = list(all_used[-100:])
             else:
-                context_words = all_used
-            context_words.extend(collected)
+                context_words = list(all_used)
+            context_words.extend([c.get("word") for c in collected if isinstance(c, dict) and c.get("word")])
             print(f"[api] History: {len(all_used)} used + {len(collected)} collected this run, sending {len(context_words)} context words")
-            used_list = ", ".join(context_words) if context_words else "(none yet)"
+            used_list = ", ".join(str(w) for w in context_words if isinstance(w, str)) if context_words else "(none yet)"
             prompt = f"""Generate exactly 20 unique English vocabulary words from the {category} domain.
 
 STRICT RULES:
@@ -206,11 +206,28 @@ Return ONLY the JSON array. Nothing else."""
                 print(f"[api] HTTP {status} indicates auth/payment issue, but continuing retries in case it's transient...")
         except Exception as e:
             print(f"[api] Attempt {attempt + 1}/{max_attempts} FAILED: {type(e).__name__}: {e}")
+    if len(collected) < num_words:
+        print("[fallback] Checking curated fallback vocabulary bank for unused words...")
+        fallback_words = [
+            {"word": "ephemeral", "level": "C1", "part_of_speech": "adjective", "definition": "lasting for a very short time", "example": "Fame in the digital age can be ephemeral.", "synonyms": ["fleeting", "transient", "momentary"], "fun_fact": "From Greek ephemeros, meaning lasting only one day."},
+            {"word": "ubiquitous", "level": "C1", "part_of_speech": "adjective", "definition": "present everywhere at once", "example": "Smartphones have become ubiquitous in modern life.", "synonyms": ["omnipresent", "pervasive"], "fun_fact": "From Latin ubique, meaning 'everywhere'."},
+            {"word": "mellifluous", "level": "C2", "part_of_speech": "adjective", "definition": "sweet or musical; pleasant to hear", "example": "She had a rich, mellifluous voice.", "synonyms": ["dulcet", "melodious"], "fun_fact": "Literally means 'flowing with honey' in Latin."},
+            {"word": "perspicacious", "level": "C2", "part_of_speech": "adjective", "definition": "having a ready insight into things", "example": "The perspicacious detective noticed the missing key.", "synonyms": ["shrewd", "astute", "perceptive"], "fun_fact": "From Latin perspicere, meaning 'to see through'."},
+            {"word": "sycophant", "level": "C1", "part_of_speech": "noun", "definition": "a person who flatters to gain advantage", "example": "He was surrounded by fawning sycophants.", "synonyms": ["toady", "flatterer"], "fun_fact": "In ancient Athens, it meant an informer who denounced fig exporters."}
+        ]
+        for fb in fallback_words:
+            w_clean = fb["word"].lower().strip()
+            if w_clean not in used_set:
+                collected.append(fb)
+                used_set.add(w_clean)
+                print(f"  [fallback] Added unused curated word: '{w_clean}'")
+                if len(collected) >= num_words:
+                    break
     if collected:
-        print(f"[api] WARNING: Only got {len(collected)}/{num_words} words after {max_attempts} attempts, using partial set")
-        add_words_to_history([w["word"] for w in collected])
-        return collected
-    raise RuntimeError("API failed all attempts - cannot generate words. Check POLLINATIONS_API_KEY and AI_MODEL in .env")
+        print(f"[api] Using {len(collected)} items")
+        add_words_to_history([w["word"] for w in collected[:num_words]])
+        return collected[:num_words]
+    raise RuntimeError("API failed all attempts and no unused fallback words available.")
 
 
 def create_background():
