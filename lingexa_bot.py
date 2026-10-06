@@ -32,7 +32,7 @@ VIDEO_HEIGHT = 1920
 FPS = 30
 TTS_VOICE = "en-US-GuyNeural"
 CHANNEL_NAME = "Lingexa"
-WORDS_PER_VIDEO = 5
+WORDS_PER_VIDEO = 3
 WORD_HISTORY_FILE = HISTORY_DIR / "all_generated_words.json"
 FONTS_DIR = Path(__file__).parent / "fonts"
 
