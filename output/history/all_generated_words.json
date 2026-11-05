@@ -3061,7 +3061,10 @@
     "crossdefault",
     "countertrade",
     "kurtosis",
-    "lacunary"
+    "lacunary",
+    "interpleader",
+    "amortizable",
+    "clawback"
   ],
-  "last_updated": "2026-11-05T12:54:26.039021"
+  "last_updated": "2026-11-05T16:59:27.875979"
 }
