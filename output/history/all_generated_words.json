@@ -3199,7 +3199,10 @@
     "scripless",
     "intercredit",
     "escrowless",
-    "guarantyship"
+    "guarantyship",
+    "covenantee",
+    "sequestrate",
+    "fiducialize"
   ],
-  "last_updated": "2026-11-13T01:34:24.304110"
+  "last_updated": "2026-11-13T07:41:00.180348"
 }
