@@ -3277,7 +3277,10 @@
     "polyphasic",
     "underwritership",
     "repledge",
-    "encumbrance"
+    "encumbrance",
+    "nonpayment",
+    "circularity",
+    "segmentation"
   ],
-  "last_updated": "2026-11-17T14:03:20.533512"
+  "last_updated": "2026-11-17T18:00:51.257805"
 }
