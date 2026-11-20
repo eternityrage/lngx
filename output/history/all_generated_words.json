@@ -3328,7 +3328,10 @@
     "deleveraging",
     "benefaction",
     "bailment",
-    "forfeit"
+    "forfeit",
+    "reciprocant",
+    "capitalization",
+    "intermediation"
   ],
-  "last_updated": "2026-11-20T08:12:40.115749"
+  "last_updated": "2026-11-20T15:34:01.436836"
 }
