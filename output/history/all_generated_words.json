@@ -3358,7 +3358,10 @@
     "tenderoffer",
     "kestrelize",
     "receivables",
-    "preemption"
+    "preemption",
+    "scrutability",
+    "intermittency",
+    "microhedge"
   ],
-  "last_updated": "2026-11-21T22:06:15.490676"
+  "last_updated": "2026-11-22T00:47:18.207484"
 }
